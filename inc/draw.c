@@ -10,27 +10,27 @@ void bres_line(SDL_Surface *surf, int x0, int y0, int x1, int y1, long int color
 	if (dx < 0) step_x = -step_x;
 	if (dy < 0) step_y = -step_y;
 	int err_x = 0;
-    int err_y = 0;
-    int dst = dist + 1;
-    
+	int err_y = 0;
+	int dst = dist + 1;
+	
 	unsigned char *addr = (unsigned char *) surf->pixels + y0 * surf->pitch + x0 * 4;
 
-    while(dst--) {
-    	//addr = (unsigned long int *)((unsigned char *) surf->pixels + y0 * surf->pitch)// + x0 * 4);
+	while(dst--) {
+		//addr = (unsigned long int *)((unsigned char *) surf->pixels + y0 * surf->pitch)// + x0 * 4);
 		*((unsigned long *) addr) = color;
-        err_x += dist_x;
-        err_y += dist_y;
-        if (err_x >= dist) {
-        	err_x -= dist;
-        	//x0 += step_x;
+		err_x += dist_x;
+		err_y += dist_y;
+		if (err_x >= dist) {
+			err_x -= dist;
+			//x0 += step_x;
 			addr += step_x;
-        }
-        if (err_y >= dist) {
-        	err_y -= dist;
-            //y0 += step_y;
+		}
+		if (err_y >= dist) {
+			err_y -= dist;
+			//y0 += step_y;
 			addr += step_y;
-        }
-    }
+		}
+	}
 }
 
 void draw_poly(SDL_Surface *surf, Poly *poly, int color) {

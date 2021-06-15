@@ -183,15 +183,15 @@ int main(int argc, char* argv[]) {
 			SDL_SetWindowTitle(window, (const char *)&window_title);
 		}
 
-        result = SDL_PollEvent(&event);
+		result = SDL_PollEvent(&event);
 		if (result && event.type == SDL_QUIT) {
-    		break;
+			break;
 		}
 
 		if (state.mode == MODE_RUN) {
 			default_controller(&state, &event);
 		} else {
-        	if (result) {
+			if (result) {
 				for (int i = 0; i < state.event_filter_count; i++) {
 					if (state.event_filter[i] == event.type) {
 						if (state.mode == MODE_MASK) {

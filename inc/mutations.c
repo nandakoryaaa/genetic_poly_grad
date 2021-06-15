@@ -103,7 +103,7 @@ unsigned long long calc_rating(Chromo *chromo, State *state) {
 }
 
 void normalize_poly(Poly *poly, Settings *s) {
-    Vertex *vtmp;
+	Vertex *vtmp;
 	Vertex v;
 
 	for (int i = 0; i < 3; i++) {
@@ -120,7 +120,7 @@ void normalize_poly(Poly *poly, Settings *s) {
 		}
 	}
 
-    if (poly->v0.y > poly->v1.y) {
+	if (poly->v0.y > poly->v1.y) {
 		v.x = poly->v0.x;
 		v.y = poly->v0.y;
 		v.pixel.value = poly->v0.pixel.value;
@@ -132,7 +132,7 @@ void normalize_poly(Poly *poly, Settings *s) {
 		poly->v1.pixel.value = v.pixel.value;
 	}
 
-    if (poly->v0.y > poly->v2.y) {
+	if (poly->v0.y > poly->v2.y) {
 		v.x = poly->v0.x;
 		v.y = poly->v0.y;
 		v.pixel.value = poly->v0.pixel.value;
@@ -142,9 +142,9 @@ void normalize_poly(Poly *poly, Settings *s) {
 		poly->v2.x = v.x;
 		poly->v2.y = v.y;
 		poly->v2.pixel.value = v.pixel.value;
-    }
+	}
 
-    if (poly->v1.y > poly->v2.y) {
+	if (poly->v1.y > poly->v2.y) {
 		v.x = poly->v1.x;
 		v.y = poly->v1.y;
 		v.pixel.value = poly->v1.pixel.value;
@@ -154,7 +154,7 @@ void normalize_poly(Poly *poly, Settings *s) {
 		poly->v2.x = v.x;
 		poly->v2.y = v.y;
 		poly->v2.pixel.value = v.pixel.value;
-    }
+	}
 
 	poly->normalized = 1;
 }
