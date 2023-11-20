@@ -1,4 +1,5 @@
-void bres_line(SDL_Surface *surf, int x0, int y0, int x1, int y1, long int color) {
+void bres_line(SDL_Surface* surf, int x0, int y0, int x1, int y1, long int color)
+{
 	int dx = x1 - x0;
 	int dy = y1 - y0;
 	int dist_x = abs(dx);
@@ -13,48 +14,48 @@ void bres_line(SDL_Surface *surf, int x0, int y0, int x1, int y1, long int color
 	int err_y = 0;
 	int dst = dist + 1;
 	
-	unsigned char *addr = (unsigned char *) surf->pixels + y0 * surf->pitch + x0 * 4;
+	unsigned char* addr = (unsigned char*) surf->pixels + y0 * surf->pitch + x0 * 4;
 
-	while(dst--) {
-		//addr = (unsigned long int *)((unsigned char *) surf->pixels + y0 * surf->pitch)// + x0 * 4);
-		*((unsigned long *) addr) = color;
+	while (dst--) {
+		*((unsigned long*) addr) = color;
 		err_x += dist_x;
 		err_y += dist_y;
 		if (err_x >= dist) {
 			err_x -= dist;
-			//x0 += step_x;
 			addr += step_x;
 		}
 		if (err_y >= dist) {
 			err_y -= dist;
-			//y0 += step_y;
 			addr += step_y;
 		}
 	}
 }
 
-void draw_poly(SDL_Surface *surf, Poly *poly, int color) {
+void draw_poly(SDL_Surface* surf, Poly* poly, int color)
+{
 	bres_line(surf, poly->v0.x, poly->v0.y, poly->v1.x, poly->v1.y, color);
 	bres_line(surf, poly->v1.x, poly->v1.y, poly->v2.x, poly->v2.y, color);
 	bres_line(surf, poly->v2.x, poly->v2.y, poly->v0.x, poly->v0.y, color);
 }
 	
-void draw_dirty_rect(SDL_Surface *surf, DirtyRect *rect, int color) {
+void draw_dirty_rect(SDL_Surface* surf, DirtyRect* rect, int color)
+{
 	bres_line(surf, rect->x0, rect->y0, rect->x1, rect->y0, color);
 	bres_line(surf, rect->x0, rect->y1, rect->x1, rect->y1, color);
 	bres_line(surf, rect->x0, rect->y0, rect->x0, rect->y1, color);
 	bres_line(surf, rect->x1, rect->y0, rect->x1, rect->y1, color);
 }
 
-void draw_rect(SDL_Surface *surf, SDL_Rect *rect, int color) {
+void draw_rect(SDL_Surface* surf, SDL_Rect* rect, int color)
+{
 	bres_line(surf, rect->x, rect->y, rect->x + rect->w - 1, rect->y, color);
 	bres_line(surf, rect->x, rect->y + rect->h - 1, rect->x + rect->w - 1, rect->y + rect->h - 1, color);
 	bres_line(surf, rect->x, rect->y, rect->x, rect->y + rect->h - 1, color);
 	bres_line(surf, rect->x + rect->w - 1, rect->y, rect->x + rect->w - 1, rect->y + rect->h - 1, color);
 }
 
-int fill_poly(SDL_Surface *surf, Poly *t) {
-
+void fill_poly(SDL_Surface* surf, Poly* t)
+{
 	// poly must be normalized
 
 	int cross_x1, cross_x2, start_x, width;
@@ -204,7 +205,8 @@ int fill_poly(SDL_Surface *surf, Poly *t) {
 	}
 }
 
-void draw_chromo(SDL_Surface *surf, Chromo *chromo, Settings *s) {
+void draw_chromo(SDL_Surface* surf, Chromo* chromo, Settings* s)
+{
 	SDL_Rect rect = {0, 0, surf->w, surf->h};
 	SDL_FillRect(surf, &rect, 0);
 

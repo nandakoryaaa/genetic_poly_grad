@@ -63,6 +63,7 @@ typedef struct {
 
 	int addPolyMutationFast = 300;
 	int addPolyMutationSlow = 12000;
+	int growRate = 500;
 	int delPolyMutation = 1500;
 	int movePolyMutation = 700;
 
@@ -80,7 +81,7 @@ typedef struct {
 	char flatColor = 0;
 	char flatAlpha = 0;
 	char initGray = 0;
-	char greedy = 0;
+	
 } Settings;
 
 typedef struct {

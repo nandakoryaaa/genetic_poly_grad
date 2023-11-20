@@ -34,7 +34,8 @@ void draw_masked_blocks(State *state) {
 	state->update = 1;
 }
 
-void draw_origin_polys(State *state, int color) {
+void draw_origin_polys(State *state, int color)
+{
 	SDL_LowerBlit(state->imgSurf, &state->rect, state->screenSurf, &state->rect);
 	for (int i = 0; i < state->chromo->count; i++) {
 		Poly *poly = &state->chromo->genes[i];
@@ -45,7 +46,8 @@ void draw_origin_polys(State *state, int color) {
 	state->update = 1;
 }
 
-void print_chromo(Chromo *chromo) {
+void print_chromo(Chromo *chromo)
+{
 	printf("------------- chromo rating = %llu ---------------\n", chromo->rating);
 	for (int i = 0; i < chromo->count; i++) {
 		Poly *p = &chromo->genes[i];

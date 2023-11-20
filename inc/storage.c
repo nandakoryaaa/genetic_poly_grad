@@ -1,4 +1,5 @@
-void save_bmp(State *state) {
+void save_bmp(State *state)
+{
 	char filename[] = "img_0000000000.bmp";
 	sprintf(filename + 4, "%010d.bmp", state->cnt);
 	draw_chromo(state->chromoSurf, state->chromo, state->settings);
@@ -9,7 +10,8 @@ void save_bmp(State *state) {
 	}
 }
 
-void save_chromo(State* state) {
+void save_chromo(State* state)
+{
 	char filename[] = "chromo_0000000000";
 	sprintf(filename + 7, "%010d", state->cnt);
 	FILE *fp = fopen(filename, "wb");
@@ -36,7 +38,8 @@ void save_chromo(State* state) {
 	printf("saved chromo %s\n", filename);
 }
 
-int load_chromo(State *state, const char *filename) {
+int load_chromo(State *state, const char *filename)
+{
 	FILE *fp = fopen(filename, "rb");
 	if (!fp) {
 		printf("could not load %s\n", filename);

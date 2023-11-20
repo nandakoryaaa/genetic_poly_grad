@@ -1,4 +1,5 @@
-void update_dirty_rect(Chromo *chromo, Poly *poly) {
+void update_dirty_rect(Chromo *chromo, Poly *poly)
+{
 	// poly must be normalized
 	DirtyRect *rect = &chromo->dirty_rect;
 
@@ -39,7 +40,8 @@ void update_dirty_rect(Chromo *chromo, Poly *poly) {
 	}
 }
 
-unsigned long long calc_rating(Chromo *chromo, State *state) {
+unsigned long long calc_rating(Chromo *chromo, State *state)
+{
 	Settings *s = state->settings;
 	unsigned char *chromo_pixels = (unsigned char *) state->chromoSurf->pixels;
 	unsigned char *img_pixels = (unsigned char *) state->imgSurf->pixels;
@@ -102,7 +104,8 @@ unsigned long long calc_rating(Chromo *chromo, State *state) {
 	return chromo->rating;
 }
 
-void normalize_poly(Poly *poly, Settings *s) {
+void normalize_poly(Poly *poly, Settings *s)
+{
 	Vertex *vtmp;
 	Vertex v;
 
@@ -159,7 +162,8 @@ void normalize_poly(Poly *poly, Settings *s) {
 	poly->normalized = 1;
 }
 
-void generate_vertex_rgba(Vertex *src_v, Vertex *dst_v, Settings *s) {
+void generate_vertex_rgba(Vertex *src_v, Vertex *dst_v, Settings *s)
+{
 	if (s->flatAlpha && src_v) {
 		dst_v->pixel.rgba.alpha = src_v->pixel.rgba.alpha;
 	} else {
@@ -183,7 +187,8 @@ void generate_vertex_rgba(Vertex *src_v, Vertex *dst_v, Settings *s) {
 	}
 }
 
-void init_poly(Chromo *chromo, int num, State *state) {
+void init_poly(Chromo *chromo, int num, State *state)
+{
 	unsigned char col;
 	Settings *s = state->settings;
 
@@ -269,7 +274,8 @@ void init_poly(Chromo *chromo, int num, State *state) {
 	memcpy(&poly->origin_v0, &poly->v0, sizeof(Vertex) * 3);
 }
 
-void reset_dirty_rect(Chromo *chromo, Settings *s) {
+void reset_dirty_rect(Chromo *chromo, Settings *s)
+{
 	chromo->dirty_rect.x0 = 0;
 	chromo->dirty_rect.y0 = 0;
 	chromo->dirty_rect.x1 = s->screenWidth - 1;
@@ -282,7 +288,8 @@ void reset_rating(Chromo *chromo, State *state) {
 	memset(&chromo->blocks, 0, sizeof(unsigned int) * state->blocks_w * state->blocks_h);
 }
 
-int init_chromo(Chromo *chromo, State *state) {
+int init_chromo(Chromo *chromo, State *state)
+{
 	Settings *s = state->settings;
 
 	chromo->count = s->minPolygons;
@@ -312,8 +319,9 @@ int init_chromo(Chromo *chromo, State *state) {
 	return 1;
 }
 
-int mutate_vertex_alpha(Vertex *v, Settings *s) {
-	if (rndc(s->alphaMutation)) {
+int mutate_vertex_alpha(Vertex *v, Settings *s)
+{
+	if (rndc(s->alphaMutation / 40)) {
 		v->pixel.rgba.alpha = rndi(s->minAlpha, s->maxAlpha);
 		return DIRTY_ALPHA;
 	}
@@ -321,18 +329,25 @@ int mutate_vertex_alpha(Vertex *v, Settings *s) {
 	return 0;
 }
 
-int mutate_vertex_color(Vertex *v, Settings *s) {
+int mutate_vertex_color(Vertex *v, Settings *s)
+{
 	int dirty = 0;
+	
+	if (rndc(s->componentMutation / 40)) {
+		//char mask[7] = { 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
+		//char m = mask[rnd(7)];
 
-	if (rndc(s->componentMutation)) {
+		//if (m & 1)
 		v->pixel.rgba.r += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
-	if (rndc(s->componentMutation)) {
+	if (rndc(s->componentMutation / 40)) {
+		//if (m & 2)
 		v->pixel.rgba.g += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
-	if (rndc(s->componentMutation)) {
+	if (rndc(s->componentMutation / 40)) {
+		//if (m & 4)
 		v->pixel.rgba.b += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
@@ -340,34 +355,36 @@ int mutate_vertex_color(Vertex *v, Settings *s) {
 	return dirty;
 }
 
-int mutate_vertex_position(Poly *poly, Vertex *v, Settings *s) {
+int mutate_vertex_position(Poly *poly, Vertex *v, Settings *s)
+{
 	int dirty = 0;
 
-	if (rndc(s->pointMaxMutation)) {
+	/*if (rndc(s->pointMaxMutation)) {
 		v->x = rnd(s->screenWidth);
 		v->y = rnd(s->screenHeight);
 		poly->normalized = 0;
 		dirty = DIRTY_VERTEX;
-	}
+	}*/
 
-	if (rndc(s->pointMidMutation)) {
+	//if (rndc(s->pointMidMutation)) {
 		v->x += rnds(s->pointMidMovement);
 		v->y += rnds(s->pointMidMovement);
 		poly->normalized = 0;
 		dirty = DIRTY_VERTEX;
-	}
+	//}
 
-	if (rndc(s->pointMinMutation)) {
+	/*if (rndc(s->pointMinMutation)) {
 		v->x += rnds(s->pointSmallMovement);
 		v->y += rnds(s->pointSmallMovement);
 		poly->normalized = 0;
 		dirty = DIRTY_VERTEX;
-	}
+	}*/
 
 	return dirty;
 };
 
-int mutate_poly(Poly *poly, State *state) {
+int mutate_poly(Poly *poly, State *state)
+{
 	int dirty = 0;
 
 	dirty |= mutate_vertex_alpha(&poly->v0, state->settings);
@@ -397,7 +414,7 @@ int mutate_poly(Poly *poly, State *state) {
 		dirty |= mutate_vertex_color(&poly->v2, state->settings);
 	}
 
-	if (rndc(state->settings->scalePolyMutation)) {
+/*	if (rndc(state->settings->scalePolyMutation)) {
 		int scale = 100 + rnds(10);
 		switch(rnd(3)) {
 			case 0:
@@ -432,12 +449,19 @@ int mutate_poly(Poly *poly, State *state) {
 		poly->v2.y += shift_y;
 		dirty |= DIRTY_SHIFT;
 		poly->normalized = 0;
-	} else {
-		dirty |= mutate_vertex_position(poly, &poly->v0, state->settings);
-		dirty |= mutate_vertex_position(poly, &poly->v1, state->settings);
-		dirty |= mutate_vertex_position(poly, &poly->v2, state->settings);
+	} else {*/
+		if (!dirty) {
+			char mask[7] = { 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
+			char m = mask[rnd(7)];
+			if (m & 1)
+				dirty |= mutate_vertex_position(poly, &poly->v0, state->settings);
+			if (m & 2)
+				dirty |= mutate_vertex_position(poly, &poly->v1, state->settings);
+			if (m & 4)
+				dirty |= mutate_vertex_position(poly, &poly->v2, state->settings);
+		}
 
-	}
+	//}
 
 	if (!poly->normalized) {
 		normalize_poly(poly, state->settings);
@@ -448,7 +472,8 @@ int mutate_poly(Poly *poly, State *state) {
 	return dirty;
 }
 
-bool delete_poly(Chromo *chromo, int num) {
+bool delete_poly(Chromo *chromo, int num)
+{
 	int idx;
 	if (num == -1) {
 		idx = rnd(chromo->count);
@@ -468,8 +493,8 @@ bool delete_poly(Chromo *chromo, int num) {
 	return 1;
 }
 
-int add_poly(Chromo *chromo, State *state) {
-
+int add_poly(Chromo *chromo, State *state)
+{
 	init_poly(chromo, chromo->count, state);
 	update_dirty_rect(chromo, &chromo->genes[chromo->count]);
 	chromo->count++;
@@ -477,38 +502,15 @@ int add_poly(Chromo *chromo, State *state) {
 	return 1;
 }
 
-int move_poly(Chromo *chromo) {
-	int src = rnd(chromo->count);
-	int dst = rnd(chromo->count);
-	Poly poly;
 
-	if (src == dst) {
-		return 0;
-	}
-
-	chromo->genes[src].dirty = 1;
-	memcpy(&poly, &chromo->genes[src], sizeof(Poly));
-	update_dirty_rect(chromo, &poly);
-
-	int count = chromo->count - 1;
-	if (src < count) {		
-		memcpy(&chromo->genes[src], &chromo->genes[src + 1], (count - src) * sizeof(Poly));
-	}
-	if (dst < count) {
-		memmove(&chromo->genes[dst + 1], &chromo->genes[dst], (count - dst) * sizeof(Poly));
-	}
-
-	memcpy(&chromo->genes[dst], &poly, sizeof(Poly));
-
-	return 1;
-}
-
-void copy_chromo(Chromo *dst, Chromo *src, State *state) {
+void copy_chromo(Chromo *dst, Chromo *src, State *state)
+{
 	memcpy(dst, src, (char *) src->genes - (char *) src + sizeof(Poly) * src->count);
 	memcpy(&dst->blocks, &src->blocks, state->blocks_w * state->blocks_h * sizeof(unsigned int));
 } 
 
-int mutate_chromo(Chromo *chromo, State *state) {
+int mutate_chromo(Chromo *chromo, State *state)
+{
 	int dirty = 0;
 	int res;
 	int chance;
@@ -518,58 +520,57 @@ int mutate_chromo(Chromo *chromo, State *state) {
 	chromo->dirty_rect.dirty = 0;
 
 	if (chromo->count < s->maxPolygons) {
-		chance = s->addPolyMutationFast + (s->addPolyMutationSlow - s->addPolyMutationFast) * chromo->rating / chromo->start_rating;
-		if (rndc(chance)) {
+		//chance = s->addPolyMutationFast + (s->addPolyMutationSlow - s->addPolyMutationFast) * chromo->rating / chromo->start_rating;
+		//chance = s->addPolyMutationFast;
+		//if (rndc(chance / 10)) {
+		if (rndc(s->growRate)) {
+			//printf("chance: %dm target: %lu\n", chance, 0xffffffff / chance);
 			add_poly(chromo, state);
 			dirty = 1;
+			return dirty;
 		}
 	}
 
-	if (rndc(s->delPolyMutation) && chromo->count > s->minPolygons) {
+	/*if (rndc(s->delPolyMutation) && chromo->count > s->minPolygons) {
 		delete_poly(chromo, -1);
 		dirty = 1;
 	}
 
 	if (rndc(s->movePolyMutation)) {
 		dirty |= move_poly(chromo);
-	}
-
-	for (int i = 0; i < chromo->count; i++) {
+	}*/
+	int i;
+	for (i = 0; i < chromo->count; i++) {
 		chromo->genes[i].dirty = 0;
+	}
+	//for (int i = 0; i < chromo->count; i++) {
+	//do {
+		i = rnd(chromo->count);
+		//chromo->genes[i].dirty = 0;
 		memcpy(&tmp_poly, &chromo->genes[i], sizeof(Poly));
-		if (mutate_poly(&tmp_poly, state)) {
+	//}
+		while(!mutate_poly(&tmp_poly, state));
+		//if (mutate_poly(&tmp_poly, state)) {
 			dirty = 1;
 			update_dirty_rect(chromo, &chromo->genes[i]);
 			update_dirty_rect(chromo, &tmp_poly);
 			memcpy(&chromo->genes[i], &tmp_poly, sizeof(Poly));
-		}
-	}
+		//}
+	//}
 
 	return dirty;
 }
 
-void process_chromo(State *state) {
-
+void process_chromo(State *state)
+{
 	Chromo *chromo = state->chromo;
 	Chromo *test_chromo = state->test_chromo;
 	Poly *poly;
 
 	copy_chromo(test_chromo, chromo, state);
 
-	while(!mutate_chromo(test_chromo, state)) {
-		if (state->settings->greedy) {
-			if (chromo->pos >= chromo->count) {
-				chromo->pos = 0;
-			}
-			poly = &test_chromo->genes[chromo->pos];
-			if (mutate_poly(poly, state)) {
-				update_dirty_rect(test_chromo, poly);
-				update_dirty_rect(test_chromo, &chromo->genes[chromo->pos]);
-				chromo->pos++;
-				break;
-			}
-		}
-	}
+	//while(!mutate_chromo(test_chromo, state)) {}
+	mutate_chromo(test_chromo, state);
 
 	draw_chromo(state->chromoSurf, test_chromo, state->settings);
 	calc_rating(test_chromo, state);
@@ -598,7 +599,8 @@ void process_chromo(State *state) {
 	}
 }
 
-void get_block_rect(State *state, int block_offset, SDL_Rect *rect) {
+void get_block_rect(State *state, int block_offset, SDL_Rect *rect)
+{
 	rect->x = (block_offset % state->blocks_w) * BLOCK_SIZE;
 	rect->y = (block_offset / state->blocks_w) * BLOCK_SIZE;
 	rect->w = state->settings->screenWidth - rect->x;
