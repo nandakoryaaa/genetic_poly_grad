@@ -321,7 +321,7 @@ int init_chromo(Chromo *chromo, State *state)
 
 int mutate_vertex_alpha(Vertex *v, Settings *s)
 {
-	if (rndc(s->alphaMutation / 40)) {
+	if (rndc(s->alphaMutation / 80)) {
 		v->pixel.rgba.alpha = rndi(s->minAlpha, s->maxAlpha);
 		return DIRTY_ALPHA;
 	}
@@ -333,7 +333,7 @@ int mutate_vertex_color(Vertex *v, Settings *s)
 {
 	int dirty = 0;
 	
-	if (rndc(s->componentMutation / 40)) {
+	if (rndc(s->componentMutation / 80)) {
 		//char mask[7] = { 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
 		//char m = mask[rnd(7)];
 
@@ -341,12 +341,12 @@ int mutate_vertex_color(Vertex *v, Settings *s)
 		v->pixel.rgba.r += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
-	if (rndc(s->componentMutation / 40)) {
+	if (rndc(s->componentMutation / 80)) {
 		//if (m & 2)
 		v->pixel.rgba.g += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
-	if (rndc(s->componentMutation / 40)) {
+	if (rndc(s->componentMutation / 80)) {
 		//if (m & 4)
 		v->pixel.rgba.b += rnds(20);
 		dirty = DIRTY_COLOR;
