@@ -54,8 +54,59 @@ void draw_rect(SDL_Surface* surf, SDL_Rect* rect, int color)
 	bres_line(surf, rect->x + rect->w - 1, rect->y, rect->x + rect->w - 1, rect->y + rect->h - 1, color);
 }
 
-void fill_poly(SDL_Surface* surf, Poly* t)
+void* draw_line(void* arg)
 {
+	ThreadState* st = (ThreadState*) arg;
+	printf("thread start: %d\n", st->thread_id);
+
+	while (1) {
+		//pthread_mutex_lock(&mutex);
+		while (st->tail == st->head) {
+			if (!working) {
+				//pthread_mutex_unlock(&mutex);
+				printf("thread end: %d\n", st->thread_id);
+				return NULL;
+			}
+			//_sleep(1);
+		}
+
+		Workload w = st->workbuffer[st->tail];
+		
+		//pthread_mutex_unlock(&mutex);
+
+		int range_r = w.end_r - w.start_r;
+		int range_g = w.end_g - w.start_g;
+		int range_b = w.end_b - w.start_b;
+		int range_alpha = w.end_alpha - w.start_alpha;
+
+		for (int i = 0; i < w.width; i++) {
+			unsigned int src_alpha = w.start_alpha + range_alpha * i / w.width;
+
+			int ab = (w.start_b + range_b * i / w.width) * src_alpha;
+			int ag = (w.start_g + range_g * i / w.width) * src_alpha;
+			int ar = (w.start_r + range_r * i / w.width) * src_alpha;
+
+			w.addr[0] = (ab + w.addr[0] * (255 - src_alpha)) / 255;
+			w.addr[1] = (ag + w.addr[1] * (255 - src_alpha)) / 255;
+			w.addr[2] = (ar + w.addr[2] * (255 - src_alpha)) / 255;
+
+			w.addr += 4;
+		}
+
+		if (st->tail + 1 == QUEUE_SIZE) {
+			st->tail = 0;
+		} else {
+			st->tail++;
+		}
+		//int* wrk = (int *)&work_cnt;
+		//(*wrk)++;
+		st->cnt++;
+	}
+}
+
+int fill_poly(SDL_Surface* surf, Poly* t)
+{
+	int queued = 0;
 	// poly must be normalized
 
 	int cross_x1, cross_x2, start_x, width;
@@ -120,6 +171,15 @@ void fill_poly(SDL_Surface* surf, Poly* t)
 				end_alpha = v0_alpha + (v2_alpha - v0_alpha) * progress_y / dy2;
 			}
 
+			//printf("queuing line %d\n", top_y);
+			queue({
+				(unsigned char *)surf->pixels + top_y * surf->pitch + start_x * 4,
+				width,
+				start_r, start_g, start_b, start_alpha,
+				end_r, end_g, end_b, end_alpha
+			});
+			queued++;
+/*
 			range_r = end_r - start_r;
 			range_g = end_g - start_g;
 			range_b = end_b - start_b;
@@ -139,7 +199,7 @@ void fill_poly(SDL_Surface* surf, Poly* t)
 
 				addr += 4;
 			}
-
+*/
 			top_y++;
 		}
 	}
@@ -180,7 +240,17 @@ void fill_poly(SDL_Surface* surf, Poly* t)
 				end_b = v0_b + (v2_b - v0_b) * progress_y / dy2;
 				end_alpha = v0_alpha + (v2_alpha - v0_alpha) * progress_y / dy2;
 			}
+			//printf("queuing part 2 line %d\n", top_y);
 
+			queue({
+				(unsigned char *)surf->pixels + top_y * surf->pitch + start_x * 4,
+				width,
+				start_r, start_g, start_b, start_alpha,
+				end_r, end_g, end_b, end_alpha
+			});
+			queued++;
+
+/*
 			range_r = end_r - start_r;
 			range_g = end_g - start_g;
 			range_b = end_b - start_b; 
@@ -200,17 +270,43 @@ void fill_poly(SDL_Surface* surf, Poly* t)
 
 				addr += 4;
 			}
+*/
 			top_y++;
 		}
 	}
+	return queued;
 }
 
 void draw_chromo(SDL_Surface* surf, Chromo* chromo, Settings* s)
 {
+	int queued = 0;
+	thread_state1.cnt = 0;
+	thread_state1.cnt = 0;
 	SDL_Rect rect = {0, 0, surf->w, surf->h};
 	SDL_FillRect(surf, &rect, 0);
 
 	for (int i = 0; i < chromo->count; i++) {
-		fill_poly(surf, &chromo->genes[i]);
+		thread_state1.cnt = 0;
+		thread_state2.cnt = 0;
+		thread_state3.cnt = 0;
+		thread_state4.cnt = 0;
+
+		work_cnt = 0;
+		queued = fill_poly(surf, &chromo->genes[i]);
+		while (//work_cnt != queued
+			thread_state1.head != thread_state1.tail
+			|| thread_state2.head != thread_state2.tail
+			|| thread_state3.head != thread_state3.tail
+			|| thread_state4.head != thread_state4.tail
+		);
+		/*if (work_cnt != queued) {
+			printf("work cnt=%d queued=%d t1=%d t2=%d t3=%d t4=%d sum=%d\n",
+				work_cnt, queued,
+				thread_state1.cnt, thread_state2.cnt, thread_state3.cnt, thread_state4.cnt,
+				thread_state1.cnt + thread_state2.cnt + thread_state3.cnt + thread_state4.cnt
+			);
+			_sleep(200);
+		}*/
+		
 	}
 }

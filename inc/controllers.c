@@ -1,10 +1,12 @@
-void set_mode(State *state, Mode mode, int event_filter[], int filter_count) {
+void set_mode(State *state, Mode mode, int event_filter[], int filter_count)
+{
 	state->mode = mode;
 	state->event_filter = event_filter;
 	state->event_filter_count = filter_count;
 }
 
-void draw_masked_blocks(State *state) {
+void draw_masked_blocks(State *state)
+{
 	SDL_Rect rect;
 	int block_index = 0;
 	SDL_LowerBlit(state->imgSurf, &state->rect, state->screenSurf, &state->rect);
@@ -56,7 +58,8 @@ void print_chromo(Chromo *chromo)
 	printf("dirty rect: %d %d - %d %d\n", chromo->dirty_rect.x0, chromo->dirty_rect.y0, chromo->dirty_rect.x1, chromo->dirty_rect.y1);
 }
 
-unsigned long long print_blocks(Chromo *chromo, State *state) {
+unsigned long long print_blocks(Chromo *chromo, State *state)
+{
 	unsigned long long sum = 0;
 	for (int y = 0; y < state->blocks_h; y++) {
 		for (int x = 0; x < state->blocks_w; x++) {
@@ -69,10 +72,11 @@ unsigned long long print_blocks(Chromo *chromo, State *state) {
 	return sum;
 }
 
-void mask_controller(State *state, SDL_Event *event) {
+void mask_controller(State *state, SDL_Event *event)
+{
 	Chromo *chromo = state->chromo;
 	if (event->type == SDL_KEYDOWN) {
-		if (event->key.keysym.sym == ' ') {
+		if (event->key.keysym.sym == ' ' || event->key.keysym.sym == 27) {
 			set_mode(state, MODE_RUN, event_filter_run, sizeof(event_filter_run));
 		}
 	} else if (event->type == SDL_MOUSEMOTION) {
@@ -87,24 +91,22 @@ void mask_controller(State *state, SDL_Event *event) {
 	}
 }
 
-void origin_controller(State *state, SDL_Event *event) {
-	if (event->key.keysym.sym == 'o') {
+void origin_controller(State *state, SDL_Event *event)
+{
+	if (event->key.keysym.sym == 'o' || event->key.keysym.sym == 27) {
 		set_mode(state, MODE_RUN, event_filter_run, sizeof(event_filter_run));
 	}
 }
 
-void default_controller(State *state, SDL_Event *event) {
-	char m;
-
+void default_controller(State *state, SDL_Event *event)
+{
 	process_chromo(state);
 
 	if (event->type == SDL_KEYDOWN) {
 		switch(event->key.keysym.sym) {
 			case 'd':
-				m = (state->showBounds << 1) + state->showPolys;
-				m++;
-				state->showBounds = (m >> 1) & 1;
-				state->showPolys = m & 1;
+				state->showPolys++;
+				state->showPolys &= 3;
 				break;
 			case 'b':
 				print_blocks(state->chromo, state);
@@ -135,9 +137,9 @@ void default_controller(State *state, SDL_Event *event) {
 				break;
 			case 'w':
 				unsigned int elapsed = time(0) - state->start_time;
-				printf("%d: sel.%d cnt.%d rat.%llu scaled %d shifted %d wiggled %d %02d:%02d\n",
+				printf("%d: sel.%d cnt.%d rat.%llu %02d:%02d\n",
 					state->cnt, state->selected_cnt, state->chromo->count, state->chromo->rating,
-					state->scale_cnt, state->shift_cnt, state->pos_cnt, elapsed / 3600, (elapsed % 3600) / 60
+					elapsed / 3600, (elapsed % 3600) / 60
 				);
 				break;
 		}

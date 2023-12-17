@@ -106,57 +106,60 @@ unsigned long long calc_rating(Chromo *chromo, State *state)
 
 void normalize_poly(Poly *poly, Settings *s)
 {
-	Vertex *vtmp;
 	Vertex v;
 
-	for (int i = 0; i < 3; i++) {
-		vtmp = &((Vertex *)&poly->v0)[i];
-		if (vtmp->x < 0) {
-			vtmp->x = 0;
-		} else if (vtmp->x >= s->screenWidth) {
-			vtmp->x = s->screenWidth - 1;
-		}
-		if (vtmp->y < 0) {
-			vtmp->y = 0;
-		} else if (vtmp->y >= s->screenHeight) {
-			vtmp->y = s->screenHeight - 1;
-		}
+	if (poly->v0.x < 0) {
+		poly->v0.x = 0;
+	} else if (poly->v0.x >= s->screenWidth) {
+		poly->v0.x = s->screenWidth - 1;
+	}
+
+	if (poly->v1.x < 0) {
+		poly->v1.x = 0;
+	} else if (poly->v1.x >= s->screenWidth) {
+		poly->v1.x = s->screenWidth - 1;
+	}
+
+	if (poly->v2.x < 0) {
+		poly->v2.x = 0;
+	} else if (poly->v2.x >= s->screenWidth) {
+		poly->v2.x = s->screenWidth - 1;
+	}
+
+	if (poly->v0.y < 0) {
+		poly->v0.y = 0;
+	} else if (poly->v0.y >= s->screenHeight) {
+		poly->v0.y = s->screenHeight - 1;
+	}
+
+	if (poly->v1.y < 0) {
+		poly->v1.y = 0;
+	} else if (poly->v1.y >= s->screenHeight) {
+		poly->v1.y = s->screenHeight - 1;
+	}
+
+	if (poly->v2.y < 0) {
+		poly->v2.y = 0;
+	} else if (poly->v2.y >= s->screenHeight) {
+		poly->v2.y = s->screenHeight - 1;
 	}
 
 	if (poly->v0.y > poly->v1.y) {
-		v.x = poly->v0.x;
-		v.y = poly->v0.y;
-		v.pixel.value = poly->v0.pixel.value;
-		poly->v0.x = poly->v1.x;
-		poly->v0.y = poly->v1.y;
-		poly->v0.pixel.value = poly->v1.pixel.value;
-		poly->v1.x = v.x;
-		poly->v1.y = v.y;
-		poly->v1.pixel.value = v.pixel.value;
+		v = poly->v0;
+		poly->v0 = poly->v1;
+		poly->v1 = v;
 	}
 
 	if (poly->v0.y > poly->v2.y) {
-		v.x = poly->v0.x;
-		v.y = poly->v0.y;
-		v.pixel.value = poly->v0.pixel.value;
-		poly->v0.x = poly->v2.x;
-		poly->v0.y = poly->v2.y;
-		poly->v0.pixel.value = poly->v2.pixel.value;
-		poly->v2.x = v.x;
-		poly->v2.y = v.y;
-		poly->v2.pixel.value = v.pixel.value;
+		v = poly->v0;
+		poly->v0 = poly->v2;
+		poly->v2 = v;
 	}
 
 	if (poly->v1.y > poly->v2.y) {
-		v.x = poly->v1.x;
-		v.y = poly->v1.y;
-		v.pixel.value = poly->v1.pixel.value;
-		poly->v1.x = poly->v2.x;
-		poly->v1.y = poly->v2.y;
-		poly->v1.pixel.value = poly->v2.pixel.value;
-		poly->v2.x = v.x;
-		poly->v2.y = v.y;
-		poly->v2.pixel.value = v.pixel.value;
+		v = poly->v1;
+		poly->v1 = poly->v2;
+		poly->v2 = v;
 	}
 
 	poly->normalized = 1;
@@ -292,6 +295,7 @@ int init_chromo(Chromo *chromo, State *state)
 {
 	Settings *s = state->settings;
 
+	//chromo->genes = malloc(s->maxPolygons, sizof(Poly));
 	chromo->count = s->minPolygons;
 	chromo->pos = 0;
 
@@ -334,20 +338,14 @@ int mutate_vertex_color(Vertex *v, Settings *s)
 	int dirty = 0;
 	
 	if (rndc(s->componentMutation / 80)) {
-		//char mask[7] = { 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
-		//char m = mask[rnd(7)];
-
-		//if (m & 1)
 		v->pixel.rgba.r += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
 	if (rndc(s->componentMutation / 80)) {
-		//if (m & 2)
 		v->pixel.rgba.g += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
 	if (rndc(s->componentMutation / 80)) {
-		//if (m & 4)
 		v->pixel.rgba.b += rnds(20);
 		dirty = DIRTY_COLOR;
 	}
@@ -357,30 +355,11 @@ int mutate_vertex_color(Vertex *v, Settings *s)
 
 int mutate_vertex_position(Poly *poly, Vertex *v, Settings *s)
 {
-	int dirty = 0;
+	v->x += rnds(s->pointMidMovement);
+	v->y += rnds(s->pointMidMovement);
+	poly->normalized = 0;
 
-	/*if (rndc(s->pointMaxMutation)) {
-		v->x = rnd(s->screenWidth);
-		v->y = rnd(s->screenHeight);
-		poly->normalized = 0;
-		dirty = DIRTY_VERTEX;
-	}*/
-
-	//if (rndc(s->pointMidMutation)) {
-		v->x += rnds(s->pointMidMovement);
-		v->y += rnds(s->pointMidMovement);
-		poly->normalized = 0;
-		dirty = DIRTY_VERTEX;
-	//}
-
-	/*if (rndc(s->pointMinMutation)) {
-		v->x += rnds(s->pointSmallMovement);
-		v->y += rnds(s->pointSmallMovement);
-		poly->normalized = 0;
-		dirty = DIRTY_VERTEX;
-	}*/
-
-	return dirty;
+	return DIRTY_VERTEX;
 };
 
 int mutate_poly(Poly *poly, State *state)
@@ -414,54 +393,18 @@ int mutate_poly(Poly *poly, State *state)
 		dirty |= mutate_vertex_color(&poly->v2, state->settings);
 	}
 
-/*	if (rndc(state->settings->scalePolyMutation)) {
-		int scale = 100 + rnds(10);
-		switch(rnd(3)) {
-			case 0:
-				poly->v1.x = poly->v1.x + (poly->v1.x - poly->v0.x) * scale / 100;
-				poly->v1.y = poly->v1.y + (poly->v1.y - poly->v0.y) * scale / 100;
-				poly->v2.x = poly->v2.x + (poly->v2.x - poly->v0.x) * scale / 100;
-				poly->v2.y = poly->v2.y + (poly->v2.y - poly->v0.y) * scale / 100;
-				break;
-			case 1:
-				poly->v0.x = poly->v0.x + (poly->v0.x - poly->v1.x) * scale / 100;
-				poly->v0.y = poly->v0.y + (poly->v0.y - poly->v1.y) * scale / 100;
-				poly->v2.x = poly->v2.x + (poly->v2.x - poly->v1.x) * scale / 100;
-				poly->v2.y = poly->v2.y + (poly->v2.y - poly->v1.y) * scale / 100;
-				break;
-			case 2:
-				poly->v0.x = poly->v0.x + (poly->v0.x - poly->v2.x) * scale / 100;
-				poly->v0.y = poly->v0.y + (poly->v0.y - poly->v2.y) * scale / 100;
-				poly->v1.x = poly->v1.x + (poly->v1.x - poly->v2.x) * scale / 100;
-				poly->v1.y = poly->v1.y + (poly->v1.y - poly->v2.y) * scale / 100;
-				break;
+	if (!dirty) {
+		char m = 1 + rnd(7);
+		if (m & 1) {
+			dirty |= mutate_vertex_position(poly, &poly->v0, state->settings);
 		}
-		dirty |= DIRTY_SCALE;
-		poly->normalized = 0;
-	} else if (rndc(state->settings->shiftPolyMutation)) {
-		int shift_x = rnds(state->settings->pointSmallMovement);
-		int shift_y = rnds(state->settings->pointSmallMovement);
-		poly->v0.x += shift_x;
-		poly->v0.y += shift_y;
-		poly->v1.x += shift_x;
-		poly->v1.y += shift_y;
-		poly->v2.x += shift_x;
-		poly->v2.y += shift_y;
-		dirty |= DIRTY_SHIFT;
-		poly->normalized = 0;
-	} else {*/
-		if (!dirty) {
-			char mask[7] = { 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
-			char m = mask[rnd(7)];
-			if (m & 1)
-				dirty |= mutate_vertex_position(poly, &poly->v0, state->settings);
-			if (m & 2)
-				dirty |= mutate_vertex_position(poly, &poly->v1, state->settings);
-			if (m & 4)
-				dirty |= mutate_vertex_position(poly, &poly->v2, state->settings);
+		if (m & 2) {
+			dirty |= mutate_vertex_position(poly, &poly->v1, state->settings);
 		}
-
-	//}
+		if (m & 4) {
+			dirty |= mutate_vertex_position(poly, &poly->v2, state->settings);
+		}
+	}
 
 	if (!poly->normalized) {
 		normalize_poly(poly, state->settings);
@@ -511,7 +454,6 @@ void copy_chromo(Chromo *dst, Chromo *src, State *state)
 
 int mutate_chromo(Chromo *chromo, State *state)
 {
-	int dirty = 0;
 	int res;
 	int chance;
 	Poly tmp_poly;
@@ -526,8 +468,7 @@ int mutate_chromo(Chromo *chromo, State *state)
 		if (rndc(s->growRate)) {
 			//printf("chance: %dm target: %lu\n", chance, 0xffffffff / chance);
 			add_poly(chromo, state);
-			dirty = 1;
-			return dirty;
+			return 1;
 		}
 	}
 
@@ -539,26 +480,13 @@ int mutate_chromo(Chromo *chromo, State *state)
 	if (rndc(s->movePolyMutation)) {
 		dirty |= move_poly(chromo);
 	}*/
-	int i;
-	for (i = 0; i < chromo->count; i++) {
-		chromo->genes[i].dirty = 0;
-	}
-	//for (int i = 0; i < chromo->count; i++) {
-	//do {
-		i = rnd(chromo->count);
-		//chromo->genes[i].dirty = 0;
-		memcpy(&tmp_poly, &chromo->genes[i], sizeof(Poly));
-	//}
-		while(!mutate_poly(&tmp_poly, state));
-		//if (mutate_poly(&tmp_poly, state)) {
-			dirty = 1;
-			update_dirty_rect(chromo, &chromo->genes[i]);
-			update_dirty_rect(chromo, &tmp_poly);
-			memcpy(&chromo->genes[i], &tmp_poly, sizeof(Poly));
-		//}
-	//}
 
-	return dirty;
+	int i = rnd(chromo->count);
+	update_dirty_rect(chromo, &chromo->genes[i]);
+	mutate_poly(&chromo->genes[i], state);
+	update_dirty_rect(chromo, &chromo->genes[i]);
+
+	return 1;
 }
 
 void process_chromo(State *state)
@@ -568,8 +496,6 @@ void process_chromo(State *state)
 	Poly *poly;
 
 	copy_chromo(test_chromo, chromo, state);
-
-	//while(!mutate_chromo(test_chromo, state)) {}
 	mutate_chromo(test_chromo, state);
 
 	draw_chromo(state->chromoSurf, test_chromo, state->settings);
@@ -580,18 +506,16 @@ void process_chromo(State *state)
 
 		state->selected_cnt++;
 		SDL_LowerBlit(state->chromoSurf, &state->rect, state->screenSurf, &state->rect);
-		if (state->showBounds) {
+		if (state->showPolys & 2) {
 			draw_dirty_rect(state->screenSurf, &chromo->dirty_rect, 0xff0000);
 		}
 		for (int i = 0; i < chromo->count; i++) {
 			poly = &chromo->genes[i];
 			if (poly->dirty) {
-				if (state->showPolys) {
+				if (state->showPolys & 1) {
 					draw_poly(state->screenSurf, poly, 0xffffff);
 				}
-				state->scale_cnt += (poly->dirty & DIRTY_SCALE) / DIRTY_SCALE;
-				state->shift_cnt += (poly->dirty & DIRTY_SHIFT) / DIRTY_SHIFT;
-				state->pos_cnt += (poly->dirty & DIRTY_VERTEX) / DIRTY_VERTEX;
+				poly->dirty = 0;
 			}
 		}
 

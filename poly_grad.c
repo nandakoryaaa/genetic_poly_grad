@@ -5,14 +5,69 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #define MAX_IMG_SIZE 1024
-#define MAX_CHROMO_SIZE 256
+#define MAX_CHROMO_SIZE 1024
 #define MAX_BLOCKS 32 * 32
 #define BLOCK_SIZE 32
 
+#define QUEUE_SIZE 64
+
+typedef struct {
+	unsigned char* addr;
+	int width;
+	unsigned char start_r;
+	unsigned char start_g;
+	unsigned char start_b;
+	unsigned char start_alpha;
+	unsigned char end_r;
+	unsigned char end_g;
+	unsigned char end_b;
+	unsigned char end_alpha;
+} Workload;
+
+typedef struct ThreadState {
+	pthread_t thread_id;
+	int cnt;
+	volatile int head;
+	volatile int tail;
+	Workload workbuffer[QUEUE_SIZE];
+} ThreadState;
+
+static volatile int working = 1;
+static volatile int work_cnt = 0;
+static int thread_pos = 0;
+
+ThreadState thread_state1;
+ThreadState thread_state2;
+ThreadState thread_state3;
+ThreadState thread_state4;
+
+static ThreadState* threads[4] = {
+	&thread_state1, &thread_state2, &thread_state3, &thread_state4
+};
+
 int event_filter_run[1] = { SDL_KEYDOWN };
 int event_filter_mask[4] = { SDL_KEYDOWN, SDL_MOUSEMOTION, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP };
+
+void queue(Workload w)
+{
+	while (1) {
+		if (thread_pos > 3) {
+			thread_pos = 0;
+		}
+		ThreadState* st = threads[thread_pos++];
+
+		int next_head = (st->head + 1) & (QUEUE_SIZE - 1);
+
+		if (next_head != st->tail) {
+			st->workbuffer[st->head] = w;
+			st->head = next_head;
+			break;
+		}
+	}
+}
 
 #include "inc/rnd.c"
 #include "inc/types.c"
@@ -62,6 +117,20 @@ int main(int argc, char* argv[])
 
 	settings.screenWidth = bmpSurface->w;
 	settings.screenHeight = bmpSurface->h;
+	if (settings.maxPolygons == 0) {
+		settings.maxPolygons = (settings.screenWidth * settings.screenHeight * 256) / (400 * 400);
+		if (settings.maxPolygons > MAX_CHROMO_SIZE) {
+			settings.maxPolygons = MAX_CHROMO_SIZE;
+		} else if (settings.maxPolygons < 1) {
+			settings.maxPolygons = 1;
+		}
+		printf("maxPolys set to %d\n", settings.maxPolygons);
+	}
+	if (settings.minPolygons > settings.maxPolygons) {
+		settings.minPolygons = settings.maxPolygons;
+		printf("minPolys set to %d\n", settings.minPolygons);
+	}
+
 
 	SDL_Init(SDL_INIT_VIDEO);
 
@@ -122,17 +191,24 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	pthread_create(&thread_state1.thread_id, NULL, draw_line, &thread_state1);
+	pthread_create(&thread_state2.thread_id, NULL, draw_line, &thread_state2);
+	pthread_create(&thread_state3.thread_id, NULL, draw_line, &thread_state3);
+	pthread_create(&thread_state4.thread_id, NULL, draw_line, &thread_state4);
 	draw_chromo(chromoSurface, &chromo, &settings);
 	chromo.start_rating = calc_rating(&chromo, &state);
 
-	//set_mode(&state, MODE_RUN, event_filter_run, 1);
-	set_mode(&state, MODE_MASK, event_filter_mask, sizeof(event_filter_mask));
+	if (settings.mask) {
+		set_mode(&state, MODE_MASK, event_filter_mask, sizeof(event_filter_mask));
+	} else {
+		set_mode(&state, MODE_RUN, event_filter_run, 1);
+	}
 
 	while(1) {
 		state.update = 0;
 		state.cnt++;
 		if (state.cnt % 1000 == 0) {
-			sprintf(window_title, "%d:%lluM\n", chromo.count, chromo.rating / 1000000);
+			sprintf(window_title, "%d : %.2fM", chromo.count, (float) chromo.rating / 1000000);
 			SDL_SetWindowTitle(window, (const char*) &window_title);
 		}
 
@@ -163,6 +239,14 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	working = 0;
+
+	pthread_join(thread_state1.thread_id, NULL);
+	pthread_join(thread_state2.thread_id, NULL);
+	pthread_join(thread_state3.thread_id, NULL);
+	pthread_join(thread_state4.thread_id, NULL);
+
+
 	SDL_FreeSurface(screenSurface);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -176,6 +260,8 @@ int main(int argc, char* argv[])
 		printf("%s ", argv[i]);
 	}
 	printf("-seed %d\n", state.seed);
+
+	//free(chromo.genes);
 
 	return 0;
 }

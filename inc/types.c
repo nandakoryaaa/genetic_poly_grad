@@ -2,10 +2,6 @@ typedef enum {
 	DIRTY_VERTEX = 1,
 	DIRTY_ALPHA = 2,
 	DIRTY_COLOR = 4,
-	DIRTY_SCALE = 8,
-	DIRTY_SHIFT = 16,
-	DIRTY_VERTEXSHIFT = 32,
-	DIRTY_POLY_DELETED = 64
 } DIRTY_MASK;
 
 typedef enum {
@@ -54,7 +50,7 @@ typedef struct {
 	int screenHeight;
 
 	int minPolygons = 1;
-	int maxPolygons = MAX_CHROMO_SIZE;
+	int maxPolygons = 0; // auto
 	int minAlpha = 0;
 	int maxAlpha = 255;
 	int pointMidMovement = 20;
@@ -63,25 +59,19 @@ typedef struct {
 
 	int addPolyMutationFast = 300;
 	int addPolyMutationSlow = 12000;
-	int growRate = 500;
+	int growRate = 250;
 	int delPolyMutation = 1500;
 	int movePolyMutation = 700;
 
-	int scalePolyMutation = 1500;
-	int rotatePolyMutation = 1500;
-	int shiftPolyMutation = 1500;
 	int shiftVertexMutation = 1500;
-
-	int pointMinMutation = 1500;
 	int pointMidMutation = 1500;
-	int pointMaxMutation = 1500;
 	int alphaMutation = 1500;
 	int componentMutation = 1500;
 
 	char flatColor = 0;
 	char flatAlpha = 0;
 	char initGray = 0;
-	
+	char mask = 0;
 } Settings;
 
 typedef struct {
@@ -102,15 +92,11 @@ typedef struct {
 	int event_filter_count;
 	int cnt = 0;
 	int selected_cnt = 0;
-	int shift_cnt = 0;
-	int scale_cnt = 0;
-	int pos_cnt = 0;
 	int start_time;
 	int selected_block = 0;
 	int min_block = 0;
 	int max_block = 0;
 	int seed;
-	char showBounds = 0;
 	char showPolys = 0;
 	char phase = 0;
 	char update = 0;

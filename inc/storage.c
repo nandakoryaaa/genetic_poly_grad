@@ -59,8 +59,8 @@ int load_chromo(State *state, const char *filename)
 	fread(&count, sizeof(short int), 1, fp);
 	fread(&size, sizeof(short int), 1, fp);
 
-	if (size != sizeof(Poly) || count > MAX_CHROMO_SIZE) {
-		printf("wrong save format: cnt=%d, size=%d, expected max cnt=%d, size=%d\n", count, size, MAX_CHROMO_SIZE, sizeof(Poly));
+	if (size != sizeof(Poly) || count > MAX_CHROMO_SIZE || count < 1) {
+		printf("wrong save format: cnt=%d, size=%d, expected cnt=1..%d, size=%d\n", count, size, MAX_CHROMO_SIZE, sizeof(Poly));
 		return 0;
 	}
 		

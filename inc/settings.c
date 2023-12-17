@@ -10,12 +10,20 @@ int parse_params(int argc, char **argv, State *state)
 				state->settings->flatAlpha = 1;
 			} else if (!strcmp(param, "initgray")) {
 				state->settings->initGray = 1;
+			} else if (!strcmp(param, "mask")) {
+				state->settings->mask = 1;
 			} else if (!strcmp(param, "maxalpha") && i < argc - 1) {
 				unsigned char alpha = atoi(argv[++i]);
 				if (alpha < 1 || alpha > 255) {
 					alpha = 255;
 				}
 				state->settings->maxAlpha = alpha;
+			} else if (!strcmp(param, "minalpha") && i < argc - 1) {
+				unsigned char alpha = atoi(argv[++i]);
+				if (alpha > 255) {
+					alpha = 0;
+				}
+				state->settings->minAlpha = alpha;
 			} else if (!strcmp(param, "growrate")) {
 				state->settings->growRate = atoi(argv[++i]);
 			} else if (!strcmp(param, "minpolys")) {
@@ -23,8 +31,13 @@ int parse_params(int argc, char **argv, State *state)
 				if (state->settings->minPolygons < 1) {
 					state->settings->minPolygons = 1;
 				}
-				if (state->settings->minPolygons > state->settings->maxPolygons) {
-					state->settings->minPolygons = state->settings->maxPolygons;
+			} else if (!strcmp(param, "maxpolys")) {
+				state->settings->maxPolygons = atoi(argv[++i]);
+				if (state->settings->maxPolygons < 1) {
+					state->settings->maxPolygons = 1;
+				}
+				if (state->settings->maxPolygons > MAX_CHROMO_SIZE) {
+					state->settings->maxPolygons = MAX_CHROMO_SIZE;
 				}
 			} else if (!strcmp(param, "seed") && i < argc - 1) {
 				state->seed = atoi(argv[++i]);
@@ -41,13 +54,14 @@ int parse_params(int argc, char **argv, State *state)
 		}
 	}
 
-	printf("chromo_size: %d\n", state->settings->maxPolygons);
+	printf("chromo size: %d\n", state->settings->maxPolygons);
 	printf("min polys: %d\n", state->settings->minPolygons);
 	printf("flat color: %d\n", state->settings->flatColor);
 	printf("flat alpha: %d\n", state->settings->flatAlpha);
 	printf("init gray: %d\n", state->settings->initGray);
+	printf("min alpha: %d\n", state->settings->minAlpha);
 	printf("max alpha: %d\n", state->settings->maxAlpha);
-	printf("growrate: %d\n", state->settings->growRate);
+	printf("grow rate: %d\n", state->settings->growRate);
 	printf("overdrive: %d\n", state->settings->overdrive);
 
 	return 1;
